@@ -1,9 +1,21 @@
-import React from 'react';
-import { Menu, X, Github, Linkedin, Mail } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import ResumeButton from './ResumeButton';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious();
+    if (latest > 150 && latest > previous) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+  });
 
   const navLinks = [
     { href: '#home', label: 'Home' },
@@ -15,41 +27,64 @@ const Navbar = () => {
 
   return (
     <motion.nav 
-      className="fixed w-full z-50 bg-opacity-90 backdrop-blur-sm" 
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
+      className="fixed top-6 left-0 right-0 mx-auto z-50 w-[92%] max-w-4xl rounded-full border border-white/5 bg-[#0a0f1d]/70 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] transition-all"
+      variants={{
+        visible: { y: 0, opacity: 1 },
+        hidden: { y: -100, opacity: 0 }
+      }}
+      animate={hidden ? "hidden" : "visible"}
+      transition={{ duration: 0.35, ease: "easeInOut" }}
     >
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '80px' }}>
-        <a href="#" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-          Sanket<span style={{ color: 'var(--accent-primary)' }}>.</span>
+      <div className="flex items-center justify-between px-6 py-3">
+        <a href="#" className="text-xl font-bold tracking-tight text-white flex items-center gap-1 hover:scale-105 transition-transform">
+          Sanket<span className="text-[var(--accent-primary)]">.</span>
         </a>
 
         {/* Desktop Menu */}
-        <div style={{ display: 'flex', gap: '2rem' }} className="hidden md:flex">
+        <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a key={link.label} href={link.href} style={{ color: 'var(--text-secondary)', fontWeight: '500' }} className="hover:text-white transition-colors">
+            <a 
+              key={link.label} 
+              href={link.href} 
+              className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+            >
               {link.label}
             </a>
           ))}
+          <div className="h-4 w-[1px] bg-white/10 mx-2" />
+          <ResumeButton variant="primary" className="!py-2 !px-5 text-sm rounded-full" />
         </div>
 
         {/* Mobile Menu Button */}
-        <button onClick={() => setIsOpen(!isOpen)} style={{ display: 'none', background: 'none', border: 'none', color: 'white' }} className="md:hidden block">
-          {isOpen ? <X /> : <Menu />}
+        <button 
+          onClick={() => setIsOpen(!isOpen)} 
+          className="md:hidden text-slate-300 hover:text-white transition-colors"
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Dropdown */}
       {isOpen && (
-        <div style={{ position: 'absolute', top: '80px', left: 0, width: '100%', backgroundColor: 'var(--bg-card)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="absolute top-[calc(100%+1rem)] left-0 w-full rounded-2xl border border-white/5 bg-[#0a0f1d]/95 backdrop-blur-xl p-4 flex flex-col gap-2 shadow-2xl md:hidden"
+        >
            {navLinks.map((link) => (
-            <a key={link.label} href={link.href} onClick={() => setIsOpen(false)} style={{ color: 'var(--text-primary)', padding: '0.5rem' }}>
+            <a 
+              key={link.label} 
+              href={link.href} 
+              onClick={() => setIsOpen(false)} 
+              className="text-slate-300 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl transition-all font-medium"
+            >
               {link.label}
             </a>
           ))}
-        </div>
+          <div className="mt-2 pt-4 border-t border-white/10">
+            <ResumeButton variant="primary" className="w-full justify-center !py-3 rounded-xl" />
+          </div>
+        </motion.div>
       )}
     </motion.nav>
   );
